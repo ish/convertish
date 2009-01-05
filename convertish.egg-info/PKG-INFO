@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: convertish
-Version: 0.5dev
+Version: 0.5
 Summary: Convertish is a type coercion library
 Home-page: http://ish.io/projects/show/convertish
 Author: Tim Parkin, Matt Goodall
@@ -13,5 +13,6 @@ Platform: UNKNOWN
 Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: BSD License
-Classifier: Environment :: Web EnvironmentOperating System :: OS Independent
+Classifier: Environment :: Web Environment
+Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python :: 2

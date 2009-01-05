@@ -13,7 +13,7 @@ Convertish uses adaption to coerce variable types. It currently has converters r
           "Development Status :: 4 - Beta",
           "Intended Audience :: Developers",
           "License :: OSI Approved :: BSD License",
-          "Environment :: Web Environment"
+          "Environment :: Web Environment",
           "Operating System :: OS Independent",
           "Programming Language :: Python :: 2",
       ], 
