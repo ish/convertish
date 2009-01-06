@@ -25,23 +25,27 @@ class ConvertError(Exception):
 
 class Converter(object):
     
-    def __init__(self, schemaType, **k):
-        self.schemaType = schemaType
+    def __init__(self, schema_type, **k):
+        self.schema_type = schema_type
         self.converter_options = k.pop('converter_options', {})
         
-    def fromType(self, value, converter_options={}):
-        """ convert from i.e. for NumberToString converter - from number to string"""
+    def from_type(self, value, converter_options={}):
+        """
+        convert from i.e. for NumberToString converter - from number to string
+        """
     
-    def toType(self, value, converter_options={}):
-        """ convert to i.e. for NumberToString converter - to number from string"""
+    def to_type(self, value, converter_options={}):
+        """
+        convert to i.e. for NumberToString converter - to number from string
+        """
 
 class NullConverter(Converter):
-    def fromType(self, value, converter_options={}):
+    def from_type(self, value, converter_options={}):
         if value is None:
             return None
         return value
     
-    def toType(self, value, converter_options={}):
+    def to_type(self, value, converter_options={}):
         if value is None:
             return None
         return value
@@ -50,12 +54,12 @@ class NullConverter(Converter):
 class NumberToStringConverter(Converter):
     cast = None
     
-    def fromType(self, value, converter_options={}):
+    def from_type(self, value, converter_options={}):
         if value is None:
             return None
         return str(value)
     
-    def toType(self, value, converter_options={}):
+    def to_type(self, value, converter_options={}):
         if value is None:
             return None
         value = value.strip()
@@ -85,26 +89,26 @@ if haveDecimal:
 
 class FileToStringConverter(Converter):
     
-    def fromType(self, value, converter_options={}):
+    def from_type(self, value, converter_options={}):
         if value is None:
             return None
         return value.filename
         
-    def toType(self, value, converter_options={}):
+    def to_type(self, value, converter_options={}):
         if value is None or value == '':
             return None
         return schemaish.type.File(None,value,None)
     
 class BooleanToStringConverter(Converter):
     
-    def fromType(self, value, converter_options={}):
+    def from_type(self, value, converter_options={}):
         if value is None:
             return None
         if value:
             return 'True'
         return 'False'
         
-    def toType(self, value, converter_options={}):
+    def to_type(self, value, converter_options={}):
         if value is None:
             return None
         value = value.strip()
@@ -114,12 +118,12 @@ class BooleanToStringConverter(Converter):
     
 class DateToStringConverter(Converter):
     
-    def fromType(self, value, converter_options={}):
+    def from_type(self, value, converter_options={}):
         if value is None:
             return None
         return value.isoformat()
     
-    def toType(self, value, converter_options={}):
+    def to_type(self, value, converter_options={}):
         if value is None:
             return None
         value = value.strip()
@@ -139,12 +143,12 @@ class DateToStringConverter(Converter):
 
 class TimeToStringConverter(Converter):
     
-    def fromType(self, value, converter_options={}):
+    def from_type(self, value, converter_options={}):
         if value is None:
             return None
         return value.isoformat()
     
-    def toType(self, value, converter_options={}):
+    def to_type(self, value, converter_options={}):
         if value is None:
             return None
         value = value.strip()
@@ -184,12 +188,12 @@ class TimeToStringConverter(Converter):
     
 class DateToDateTupleConverter(Converter):
     
-    def fromType(self, value, converter_options={}):
+    def from_type(self, value, converter_options={}):
         if value is None:
             return None
         return value.year, value.month, value.day
         
-    def toType(self, value, converter_options={}):
+    def to_type(self, value, converter_options={}):
         if value is None:
             return None
         try:
@@ -237,170 +241,189 @@ def convert_list_to_csvrow(l, delimiter=','):
 
         
 class SequenceToStringConverter(Converter):
-    """ I'd really like to have the converter options on the init but ruledispatch won't let me pass keyword arguments
+    """
+    I'd really like to have the converter options on the init but ruledispatch
+    won't let me pass keyword arguments
     """
     
-    def __init__(self, schemaType, **k):
-        Converter.__init__(self, schemaType, **k)
+    def __init__(self, schema_type, **k):
+        Converter.__init__(self, schema_type, **k)
         
-    def fromType(self, value, converter_options={}):
+    def from_type(self, value, converter_options={}):
         if value is None:
             return None
         delimiter = converter_options.get('delimiter',',')
-        if isinstance(self.schemaType.attr, schemaish.Sequence):
+        if isinstance(self.schema_type.attr, schemaish.Sequence):
             out = []
             for line in value:
-                lineitems =  [string_converter(self.schemaType.attr.attr).fromType(item) for item in line]
-                linestring = convert_list_to_csvrow(lineitems, delimiter=delimiter)
+                lineitems =  [
+                  string_converter(self.schema_type.attr.attr).from_type(item) \
+                    for item in line]
+                linestring = convert_list_to_csvrow( \
+                    lineitems, delimiter=delimiter)
                 out.append(linestring)
             return '\n'.join(out)
-        elif isinstance(self.schemaType.attr, schemaish.Tuple):
+        elif isinstance(self.schema_type.attr, schemaish.Tuple):
             out = []
             for line in value:
-                lineitems =  [string_converter(self.schemaType.attr.attrs[n]).fromType(item) for n,item in enumerate(line)]
-                linestring = convert_list_to_csvrow(lineitems, delimiter=delimiter)
+                lineitems =  [
+              string_converter(self.schema_type.attr.attrs[n]).from_type(item) \
+                    for n,item in enumerate(line) ]
+                linestring = convert_list_to_csvrow( \
+                    lineitems, delimiter=delimiter)
                 out.append(linestring)
             return '\n'.join(out)
  
         else:
-            value =  [string_converter(self.schemaType.attr).fromType(v) for v in value]
+            value =  [string_converter(self.schema_type.attr).from_type(v) \
+                      for v in value]
             return convert_list_to_csvrow(value, delimiter=delimiter)
         
     
-    def toType(self, value, converter_options={}):
+    def to_type(self, value, converter_options={}):
         if not value:
             return None
         delimiter = converter_options.get('delimiter',',')
-        if isinstance(self.schemaType.attr, schemaish.Sequence):
+        if isinstance(self.schema_type.attr, schemaish.Sequence):
             out = []
             for line in value.split('\n'):
                 l = convert_csvrow_to_list(line, delimiter=delimiter)
-                convl = [string_converter(self.schemaType.attr.attr).toType(v) for v in l]
+                convl = [
+                 string_converter(self.schema_type.attr.attr).to_type(v) \
+                         for v in l]
                 out.append( convl )
             return out
-        if isinstance(self.schemaType.attr, schemaish.Tuple):
+        if isinstance(self.schema_type.attr, schemaish.Tuple):
             out = []
             for line in value.split('\n'):
                 l = convert_csvrow_to_list(line, delimiter=delimiter)
-                convl = [string_converter(self.schemaType.attr.attrs[n]).toType(v) for n,v in enumerate(l)]
+                convl = [string_converter(self.schema_type.attr.attrs[n]).to_type(v) \
+                         for n,v in enumerate(l)]
                 out.append( tuple(convl) )
             return out
         else:
             if delimiter != '\n' and len(value.split('\n')) > 1:
-                raise ConvertError("More than one line found for csv with delimiter=\'%s\'"%delimiter)
+                raise ConvertError("More than one line found" \
+                           " for csv with delimiter=\'%s\'"%delimiter)
             if delimiter == '\n':
                 out = value.splitlines()
             else:
                 out = convert_csvrow_to_list(value, delimiter=delimiter)
                 
-            return [string_converter(self.schemaType.attr).toType(v) for v in out]
+            return [string_converter(self.schema_type.attr).to_type(v) \
+                    for v in out]
 
 
 
 class TupleToStringConverter(Converter):
-    """ I'd really like to have the converter options on the init but ruledispatch won't let me pass keyword arguments
+    """
+    I'd really like to have the converter options on the init but ruledispatch
+    won't let me pass keyword arguments
     """
     
-    def __init__(self, schemaType, **k):
-        Converter.__init__(self, schemaType, **k)
+    def __init__(self, schema_type, **k):
+        Converter.__init__(self, schema_type, **k)
         
-    def fromType(self, value, converter_options={}):
+    def from_type(self, value, converter_options={}):
         delimiter = converter_options.get('delimiter',',')
         if value is None:
             return None
-        lineitems =  [string_converter(self.schemaType.attrs[n]).fromType(item) for n,item in enumerate(value)]
+        lineitems =  [string_converter(self.schema_type.attrs[n]).from_type(item) \
+                      for n,item in enumerate(value)]
         linestring = convert_list_to_csvrow(lineitems, delimiter=delimiter)
 
         return linestring
         
     
-    def toType(self, value, converter_options={}):
+    def to_type(self, value, converter_options={}):
         delimiter = converter_options.get('delimiter',',')
         if not value:
             return None
         l = convert_csvrow_to_list(value, delimiter=delimiter)
-        convl = [string_converter(self.schemaType.attrs[n]).toType(v) for n,v in enumerate(l)]
+        convl = [string_converter(self.schema_type.attrs[n]).to_type(v) \
+                 for n,v in enumerate(l)]
         return tuple(convl)
     
     
 @abstract()
-def string_converter(schemaType):
+def string_converter(schema_type):
     pass
 
 
 @when(string_converter, (schemaish.String,))
-def string_to_string(schemaType):
-    return NullConverter(schemaType)
+def string_to_string(schema_type):
+    return NullConverter(schema_type)
 
 @when(string_converter, (schemaish.Integer,))
-def int_to_string(schemaType):
-    return IntegerToStringConverter(schemaType)
+def int_to_string(schema_type):
+    return IntegerToStringConverter(schema_type)
 
 @when(string_converter, (schemaish.Float,))
-def float_to_string(schemaType):
-    return FloatToStringConverter(schemaType)
+def float_to_string(schema_type):
+    return FloatToStringConverter(schema_type)
 
 @when(string_converter, (schemaish.Decimal,))
-def decimal_to_string(schemaType):
-    return DecimalToStringConverter(schemaType)
+def decimal_to_string(schema_type):
+    return DecimalToStringConverter(schema_type)
 
 @when(string_converter, (schemaish.Date,))
-def date_to_string(schemaType):
-    return DateToStringConverter(schemaType)
+def date_to_string(schema_type):
+    return DateToStringConverter(schema_type)
 
 @when(string_converter, (schemaish.Time,))
-def time_to_string(schemaType):
-    return TimeToStringConverter(schemaType)
+def time_to_string(schema_type):
+    return TimeToStringConverter(schema_type)
 
 @when(string_converter, (schemaish.Sequence,))
-def sequence_to_string(schemaType):
-    return SequenceToStringConverter(schemaType)
+def sequence_to_string(schema_type):
+    return SequenceToStringConverter(schema_type)
 
 @when(string_converter, (schemaish.Tuple,))
-def tuple_to_string(schemaType):
-    return TupleToStringConverter(schemaType)
+def tuple_to_string(schema_type):
+    return TupleToStringConverter(schema_type)
 
 @when(string_converter, (schemaish.Boolean,))
-def boolean_to_string(schemaType):
-    return BooleanToStringConverter(schemaType)
+def boolean_to_string(schema_type):
+    return BooleanToStringConverter(schema_type)
 
 @when(string_converter, (schemaish.File,))
-def file_to_string(schemaType):
-    return FileToStringConverter(schemaType)
+def file_to_string(schema_type):
+    return FileToStringConverter(schema_type)
 
 
 @abstract()
-def datetuple_converter(schemaType):
+def datetuple_converter(schema_type):
     pass
 
 @when(datetuple_converter, (schemaish.Date,))
-def date_to_datetuple(schemaType):
-    return DateToDateTupleConverter(schemaType)
+def date_to_datetuple(schema_type):
+    return DateToDateTupleConverter(schema_type)
 
 
 
 @abstract()
-def boolean_converter(schemaType):
+def boolean_converter(schema_type):
     pass
 
 @when(boolean_converter, (schemaish.Boolean,))
-def boolean_to_boolean(schemaType):
-    return NullConverter(schemaType)
+def boolean_to_boolean(schema_type):
+    return NullConverter(schema_type)
 
 
 
 @abstract()
-def file_converter(schemaType):
+def file_converter(schema_type):
     pass
 
 @when(file_converter, (schemaish.File,))
-def file_to_file(schemaType):
-    return NullConverter(schemaType)
+def file_to_file(schema_type):
+    return NullConverter(schema_type)
 
 
 
 
 
 __all__ = [
-    'string_converter','datetuple_converter','boolean_converter','file_converter'
+    'string_converter', 'datetuple_converter',
+    'boolean_converter', 'file_converter'
     ]
