@@ -2,6 +2,17 @@
 Changlelog
 ==========
 
+0.5.1 (2009-01-06)
+------------------
+
+!! API CHANGES !!
+
+* fromType becomes from_type
+* toType becomes to_type
+
+Cleaned up repo and fixed bad style in some method attributes and method names
+
+* Added files recommended by pypi including license
 
 0.5 (2009-01-05)
 ----------------
