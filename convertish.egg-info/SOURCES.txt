@@ -1,5 +1,4 @@
 .gitignore
-setup.cfg
 setup.py
 convertish/__init__.py
 convertish/convert.py

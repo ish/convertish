@@ -7,13 +7,13 @@ Convertish is a adapting library (using peak-rules) that converts from one type 
 How does Convertish work?
 +++++++++++++++++++++++++
 
-to convert from any schemaish type to a string, the type is passed to string_converter and the value is passed to the toType method.. e.g.
+to convert from any schemaish type to a string, the type is passed to string_converter and the value is passed to the to_type method.. e.g.
 
 >>> from convertish.convert import string_converter
 >>> from schemaish import Integer
->>> string_converter(Integer()).fromType(1)
+>>> string_converter(Integer()).from_type(1)
 '1'
->>> string_converter(Integer()).toType('1')
+>>> string_converter(Integer()).to_type('1')
 1
 >>> 
 
@@ -21,9 +21,9 @@ We can do this with any schemaish type.. for instance here is a date being conve
 
 >>> from schemaish import Date
 >>> import datetime
->>> string_converter(Date()).fromType(datetime.date(2008,12,18))
+>>> string_converter(Date()).from_type(datetime.date(2008,12,18))
 '2008-12-18'
->>> string_converter(Date()).toType('2008-12-18')
+>>> string_converter(Date()).to_type('2008-12-18')
 datetime.date(2008, 12, 18)
 
 This is used in formish's widgets to serialise objects.
