@@ -1,4 +1,12 @@
 .gitignore
+AUTHORS
+CHANGELOG
+FAQ
+INSTALL
+LICENSE
+NEWS
+README
+TODO
 setup.py
 convertish/__init__.py
 convertish/convert.py
