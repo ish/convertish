@@ -8,6 +8,8 @@ setup(name='convertish',
       description="Convertish is a type coercion library",
       long_description="""\
 Convertish uses adaption to coerce variable types. It currently has converters registered for schemaish types but is easily extended.
+
+      Changlog at `http://github.com/ish/convertish/raw/master/CHANGELOG <http://github.com/ish/convertish/raw/master/CHANGELOG>`_
 """,
       classifiers=[
           "Development Status :: 4 - Beta",
