@@ -2,6 +2,15 @@
 Changlelog
 ==========
 
+0.5.2 (2009-01-17)
+------------------
+
+BUG FIX: string converters ``from_type``s were returning None - should always
+         be an empty string
+
+BUG FIX: string converters ``to_type``s were checking for None - they should
+         expect an empty string for an none representation
+
 0.5.1 (2009-01-06)
 ------------------
 
