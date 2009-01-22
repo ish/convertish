@@ -49,28 +49,30 @@ class NullConverter(Converter):
 
 class NumberToStringConverter(Converter):
     cast = None
+    type_string = 'number'
     
     def from_type(self, value, converter_options={}):
         if value is None:
-            return ''
+            return None
         return str(value)
     
     def to_type(self, value, converter_options={}):
-        value = value.strip()
-        if not value:
+        if value is None:
             return None
         # "Cast" the value to the correct type. For some strange reason,
         # Python's decimal.Decimal type raises an ArithmeticError when it's
         # given a dodgy value.
+        value = value.strip()
         try:
             value = self.cast(value)
         except (ValueError, ArithmeticError):
-            raise ConvertError("Not a valid number")
+            raise ConvertError("Not a valid %s"%self.type_string)
         return value
         
         
 class IntegerToStringConverter(NumberToStringConverter):
     cast = int
+    type_string = 'integer'
 
 
 class FloatToStringConverter(NumberToStringConverter):
@@ -91,24 +93,24 @@ class FileToStringConverter(Converter):
         return value.filename
         
     def to_type(self, value, converter_options={}):
-        value = value.strip()
-        if not value:
+        if value is None:
             return None
+        value = value.strip()
         return schemaish.type.File(None,value,None)
     
 class BooleanToStringConverter(Converter):
     
     def from_type(self, value, converter_options={}):
         if value is None:
-            return ''
+            return None
         if value:
             return 'True'
         return 'False'
         
     def to_type(self, value, converter_options={}):
-        value = value.strip()
-        if not value:
+        if value is None:
             return None
+        value = value.strip()
         if value not in ('True', 'False'):
             raise ConvertError('%r should be either True or False'%value)
         return value == 'True'
@@ -117,13 +119,13 @@ class DateToStringConverter(Converter):
     
     def from_type(self, value, converter_options={}):
         if value is None:
-            return ''
+            return None
         return value.isoformat()
     
     def to_type(self, value, converter_options={}):
-        value = value.strip()
-        if not value:
+        if value is None:
             return None
+        value = value.strip()
         return self.parseDate(value)
         
     def parseDate(self, value):
@@ -142,13 +144,13 @@ class TimeToStringConverter(Converter):
     
     def from_type(self, value, converter_options={}):
         if value is None:
-            return ''
+            return None
         return value.isoformat()
     
     def to_type(self, value, converter_options={}):
-        value = value.strip()
-        if not value:
+        if value is None:
             return None
+        value = value.strip()
         return self.parseTime(value)
         
     def parseTime(self, value):
@@ -248,7 +250,7 @@ class SequenceToStringConverter(Converter):
         
     def from_type(self, value, converter_options={}):
         if value is None:
-            return ''
+            return None
         delimiter = converter_options.get('delimiter',',')
         if isinstance(self.schema_type.attr, schemaish.Sequence):
             out = []
@@ -278,9 +280,9 @@ class SequenceToStringConverter(Converter):
         
     
     def to_type(self, value, converter_options={}):
-        value = value.strip()
-        if not value:
+        if value is None:
             return None
+        value = value.strip()
         delimiter = converter_options.get('delimiter',',')
         if isinstance(self.schema_type.attr, schemaish.Sequence):
             out = []
@@ -323,9 +325,9 @@ class TupleToStringConverter(Converter):
         Converter.__init__(self, schema_type, **k)
         
     def from_type(self, value, converter_options={}):
-        delimiter = converter_options.get('delimiter',',')
         if value is None:
-            return ''
+            return None
+        delimiter = converter_options.get('delimiter',',')
         lineitems =  [string_converter(self.schema_type.attrs[n]).from_type(item) \
                       for n,item in enumerate(value)]
         linestring = convert_list_to_csvrow(lineitems, delimiter=delimiter)
@@ -334,10 +336,10 @@ class TupleToStringConverter(Converter):
         
     
     def to_type(self, value, converter_options={}):
-        delimiter = converter_options.get('delimiter',',')
-        value = value.strip()
-        if not value:
+        if value is None:
             return None
+        value = value.strip()
+        delimiter = converter_options.get('delimiter',',')
         l = convert_csvrow_to_list(value, delimiter=delimiter)
         convl = [string_converter(self.schema_type.attrs[n]).to_type(v) \
                  for n,v in enumerate(l)]

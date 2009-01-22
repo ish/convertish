@@ -1,16 +1,16 @@
 Metadata-Version: 1.0
 Name: convertish
 Version: 0.5.2
-Summary: Convertish is a type coercion library
+Summary: Convertish is a type conversion library with converters for basic types
 Home-page: http://ish.io/projects/show/convertish
 Author: Tim Parkin, Matt Goodall
 Author-email: developers@ish.io
 License: BSD
-Description: Convertish uses adaption to coerce variable types. It currently has converters registered for schemaish types but is easily extended.
+Description: Convertish uses adaption to coerce variable types. It currently has converters registered for schemaish types but is easily extended. It currently has a converter which can serialise most objects to strings. The library should be very easy to extend to convert to / from most types.
         
         Changlog at `http://github.com/ish/convertish/raw/master/CHANGELOG <http://github.com/ish/convertish/raw/master/CHANGELOG>`_
         
-Keywords: convert,converstion,coercion,adapt,adaption,schema
+Keywords: convert conversion coercion adapt adaption schema
 Platform: UNKNOWN
 Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
