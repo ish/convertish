@@ -1,7 +1,7 @@
 import unittest
 import schemaish
 from datetime import date
-from convertish.convert import string_converter, datetuple_converter
+from convertish.convert import string_converter, datetuple_converter, ConvertError
 
 
 
@@ -38,6 +38,8 @@ class TestConverters(unittest.TestCase):
         value, expected = expected, value
         actual = string_converter(type).to_type(value)
         self.assertEquals(actual,expected)
+        self.assertRaises(ConvertError, string_converter(type).to_type, 'nonsense')
+        self.assertRaises(ConvertError, string_converter(type).to_type, '1990-1-1andabit')
 
     def test_float_string_conversion(self):
         type = schemaish.Float()
