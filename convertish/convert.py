@@ -179,11 +179,8 @@ class TimeToStringConverter(Converter):
             raise ConvertError('Invalid time: '+str(e))
             
         return value
-        
  
 
-    
-    
     
 class DateToDateTupleConverter(Converter):
     
@@ -205,7 +202,6 @@ class DateToDateTupleConverter(Converter):
             raise ConvertError('Invalid date: '+str(e))
         return value
         
-
 
 
 
@@ -344,6 +340,29 @@ class TupleToStringConverter(Converter):
         convl = [string_converter(self.schema_type.attrs[n]).to_type(v) \
                  for n,v in enumerate(l)]
         return tuple(convl)
+
+
+class TupleToListConverter(Converter):
+
+    def __init__(self, schem_type, **k):
+        Converter.__init__(self, schema_type, **k)
+
+    def from_type(self, value, converter_options={}):
+        if value is None:
+            return None
+        return list(value)
+
+    def to_type(self, value, converter_options={}):
+        if value is None:
+            return None
+        return tuple(value)
+
+
+
+####
+#
+#  String Converter
+
     
     
 @abstract()
@@ -391,6 +410,10 @@ def boolean_to_string(schema_type):
 def file_to_string(schema_type):
     return FileToStringConverter(schema_type)
 
+####
+#
+#  Date Tuple Converter
+
 
 @abstract()
 def datetuple_converter(schema_type):
@@ -400,6 +423,9 @@ def datetuple_converter(schema_type):
 def date_to_datetuple(schema_type):
     return DateToDateTupleConverter(schema_type)
 
+####
+#
+#  Boolean Converter
 
 
 @abstract()
@@ -421,10 +447,101 @@ def file_to_file(schema_type):
     return NullConverter(schema_type)
 
 
+####
+#
+#  JSON Converter
+
+
+class DateToJSONConverter(Converter):
+    
+    def from_type(self, value, converter_options={}):
+        if value is None:
+            return None
+        return {'__type__':'date','year':value.year, 'month':value.month, 'day':value.day}
+        
+    def to_type(self, value, converter_options={}):
+        if value is None:
+            return None
+        try:
+            try:
+                year, month, day = int(value['year']) ,int(value['month']) ,int(value['day']) ,
+            except ValueError:
+                raise ConvertError('Invalid Number')
+            value = date(year, month, day)
+        except (TypeError, ValueError), e:
+            raise ConvertError('Invalid date: '+str(e))
+        return value
+
+class TimeToJSONConverter(Converter):
+    
+    def from_type(self, value, converter_options={}):
+        if value is None:
+            return None
+        return {'__type__':'time','hour':value.hour, 'minute':value.minute, 'second':value.second,'microsecond':value.microsecond}
+        
+    def to_type(self, value, converter_options={}):
+        if value is None:
+            return None
+        try:
+            try:
+                h, m, s, ms = int(value['hour']), int(value['minute']), int(value['second']) ,int(value.get('microsecond',0))
+            except ValueError:
+                raise ConvertError('Invalid Number')
+            value = time(h, m, s, ms)
+        except (TypeError, ValueError), e:
+            raise ConvertError('Invalid time: '+str(e))
+        return value
+
+
+@abstract()
+def json_converter(schema_type):
+    pass
+
+@when(json_converter, (schemaish.String,))
+def string_to_json(schema_type):
+    return NullConverter(schema_type)
+
+@when(json_converter, (schemaish.Integer,))
+def int_to_json(schema_type):
+    return NullConverter(schema_type)
+
+@when(json_converter, (schemaish.Float,))
+def float_to_json(schema_type):
+    return NullConverter(schema_type)
+
+# XXX
+@when(json_converter, (schemaish.Decimal,))
+def decimal_to_json(schema_type):
+    return NullConverter(schema_type)
+
+@when(json_converter, (schemaish.Date,))
+def date_to_json(schema_type):
+    return DateToJSONConverter(schema_type)
+
+@when(json_converter, (schemaish.Time,))
+def time_to_json(schema_type):
+    return TimeToJSONConverter(schema_type)
+
+@when(json_converter, (schemaish.Sequence,))
+def sequence_to_json(schema_type):
+    return NullConverter(schema_type)
+
+@when(json_converter, (schemaish.Tuple,))
+def tuple_to_json(schema_type):
+    return TupleToListConverter(schema_type)
+
+@when(json_converter, (schemaish.Boolean,))
+def boolean_to_json(schema_type):
+    return NullConverter(schema_type)
+
+@when(json_converter, (schemaish.File,))
+def file_to_json(schema_type):
+    return FileToStringConverter(schema_type)
+
 
 
 
 __all__ = [
     'string_converter', 'datetuple_converter',
-    'boolean_converter', 'file_converter'
+    'boolean_converter', 'file_converter','json_converter'
     ]
