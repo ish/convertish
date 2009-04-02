@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.6rev'
+version = '0.6dev'
 
 setup(name='convertish',
       version=version,
@@ -29,6 +29,7 @@ Convertish uses adaption to coerce variable types. It currently has converters r
       zip_safe=False,
       install_requires=[
           # -*- Extra requirements: -*-
+          "simplegeneric",
       ],
       entry_points="""
       # -*- Entry points: -*-

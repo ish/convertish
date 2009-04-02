@@ -1,4 +1,4 @@
-from peak.rules import abstract, when
+from simplegeneric import generic
 import schemaish
 
 try:
@@ -365,48 +365,48 @@ class TupleToListConverter(Converter):
 
     
     
-@abstract()
+@generic
 def string_converter(schema_type):
     pass
 
 
-@when(string_converter, (schemaish.String,))
+@string_converter.when_type(schemaish.String)
 def string_to_string(schema_type):
     return NullConverter(schema_type)
 
-@when(string_converter, (schemaish.Integer,))
+@string_converter.when_type(schemaish.Integer)
 def int_to_string(schema_type):
     return IntegerToStringConverter(schema_type)
 
-@when(string_converter, (schemaish.Float,))
+@string_converter.when_type(schemaish.Float)
 def float_to_string(schema_type):
     return FloatToStringConverter(schema_type)
 
-@when(string_converter, (schemaish.Decimal,))
+@string_converter.when_type(schemaish.Decimal)
 def decimal_to_string(schema_type):
     return DecimalToStringConverter(schema_type)
 
-@when(string_converter, (schemaish.Date,))
+@string_converter.when_type(schemaish.Date)
 def date_to_string(schema_type):
     return DateToStringConverter(schema_type)
 
-@when(string_converter, (schemaish.Time,))
+@string_converter.when_type(schemaish.Time)
 def time_to_string(schema_type):
     return TimeToStringConverter(schema_type)
 
-@when(string_converter, (schemaish.Sequence,))
+@string_converter.when_type(schemaish.Sequence)
 def sequence_to_string(schema_type):
     return SequenceToStringConverter(schema_type)
 
-@when(string_converter, (schemaish.Tuple,))
+@string_converter.when_type(schemaish.Tuple)
 def tuple_to_string(schema_type):
     return TupleToStringConverter(schema_type)
 
-@when(string_converter, (schemaish.Boolean,))
+@string_converter.when_type(schemaish.Boolean)
 def boolean_to_string(schema_type):
     return BooleanToStringConverter(schema_type)
 
-@when(string_converter, (schemaish.File,))
+@string_converter.when_type(schemaish.File)
 def file_to_string(schema_type):
     return FileToStringConverter(schema_type)
 
@@ -415,11 +415,11 @@ def file_to_string(schema_type):
 #  Date Tuple Converter
 
 
-@abstract()
+@generic
 def datetuple_converter(schema_type):
     pass
 
-@when(datetuple_converter, (schemaish.Date,))
+@datetuple_converter.when_type(schemaish.Date)
 def date_to_datetuple(schema_type):
     return DateToDateTupleConverter(schema_type)
 
@@ -428,21 +428,21 @@ def date_to_datetuple(schema_type):
 #  Boolean Converter
 
 
-@abstract()
+@generic
 def boolean_converter(schema_type):
     pass
 
-@when(boolean_converter, (schemaish.Boolean,))
+@boolean_converter.when_type(schemaish.Boolean)
 def boolean_to_boolean(schema_type):
     return NullConverter(schema_type)
 
 
 
-@abstract()
+@generic
 def file_converter(schema_type):
     pass
 
-@when(file_converter, (schemaish.File,))
+@file_converter.when_type(schemaish.File)
 def file_to_file(schema_type):
     return NullConverter(schema_type)
 
@@ -493,48 +493,48 @@ class TimeToJSONConverter(Converter):
         return value
 
 
-@abstract()
+@generic
 def json_converter(schema_type):
     pass
 
-@when(json_converter, (schemaish.String,))
+@json_converter.when_type(schemaish.String)
 def string_to_json(schema_type):
     return NullConverter(schema_type)
 
-@when(json_converter, (schemaish.Integer,))
+@json_converter.when_type(schemaish.Integer)
 def int_to_json(schema_type):
     return NullConverter(schema_type)
 
-@when(json_converter, (schemaish.Float,))
+@json_converter.when_type(schemaish.Float)
 def float_to_json(schema_type):
     return NullConverter(schema_type)
 
 # XXX
-@when(json_converter, (schemaish.Decimal,))
+@json_converter.when_type(schemaish.Decimal)
 def decimal_to_json(schema_type):
     return NullConverter(schema_type)
 
-@when(json_converter, (schemaish.Date,))
+@json_converter.when_type(schemaish.Date)
 def date_to_json(schema_type):
     return DateToJSONConverter(schema_type)
 
-@when(json_converter, (schemaish.Time,))
+@json_converter.when_type(schemaish.Time)
 def time_to_json(schema_type):
     return TimeToJSONConverter(schema_type)
 
-@when(json_converter, (schemaish.Sequence,))
+@json_converter.when_type(schemaish.Sequence)
 def sequence_to_json(schema_type):
     return NullConverter(schema_type)
 
-@when(json_converter, (schemaish.Tuple,))
+@json_converter.when_type(schemaish.Tuple)
 def tuple_to_json(schema_type):
     return TupleToListConverter(schema_type)
 
-@when(json_converter, (schemaish.Boolean,))
+@json_converter.when_type(schemaish.Boolean)
 def boolean_to_json(schema_type):
     return NullConverter(schema_type)
 
-@when(json_converter, (schemaish.File,))
+@json_converter.when_type(schemaish.File)
 def file_to_json(schema_type):
     return FileToStringConverter(schema_type)
 

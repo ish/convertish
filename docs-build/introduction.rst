@@ -2,7 +2,7 @@
 About Convertish
 ================
 
-Convertish is a adapting library (using peak-rules) that converts from one type of object to another. It's current implementation is wholy devoted to converting schemaish types and it implements string, dateparts, boolean and file conversion. 
+Convertish is a adapting library (using simplegeneric) that converts from one type of object to another. It's current implementation is wholy devoted to converting schemaish types and it implements string, dateparts, boolean and file conversion. 
 
 How does Convertish work?
 +++++++++++++++++++++++++

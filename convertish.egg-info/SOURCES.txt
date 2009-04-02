@@ -15,9 +15,11 @@ convertish.egg-info/SOURCES.txt
 convertish.egg-info/dependency_links.txt
 convertish.egg-info/entry_points.txt
 convertish.egg-info/not-zip-safe
+convertish.egg-info/requires.txt
 convertish.egg-info/top_level.txt
 convertish/tests/__init__.py
 convertish/tests/test_basic.py
+convertish/tests/test_json.py
 docs-build/Makefile
 docs-build/conf.py
 docs-build/index.rst
