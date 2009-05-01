@@ -337,8 +337,12 @@ class TupleToStringConverter(Converter):
         value = value.strip()
         delimiter = converter_options.get('delimiter',',')
         l = convert_csvrow_to_list(value, delimiter=delimiter)
+        if len(l) > len(self.schema_type.attrs):
+            raise ConvertError('Too many arguments')
+        if len(l) < len(self.schema_type.attrs):
+            raise ConvertError('Too few arguments')
         convl = [string_converter(self.schema_type.attrs[n]).to_type(v) \
-                 for n,v in enumerate(l[:len(self.schema_type.attrs)])]
+                 for n,v in enumerate(l)]
         return tuple(convl)
 
 
