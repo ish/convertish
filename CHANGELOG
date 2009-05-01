@@ -2,10 +2,12 @@
 Changlelog
 ==========
 
-0.6rev
-------
+0.5.4 (2009-05-01)
+------------------
 
 * added json converter with tests
+
+BUG FIX: Tuple conversion broke if too many items were supplied.. 
 
 0.5.3 (2009-01-22)
 ------------------
