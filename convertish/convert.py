@@ -22,6 +22,11 @@ class ConvertError(Exception):
         return self.message
     __unicode__ = __str__
 
+    # Hide Python 2.6 deprecation warnings.
+    def _get_message(self): return self._message
+    def _set_message(self, message): self._message = message
+    message = property(_get_message, _set_message)
+
 
 class Converter(object):
     
