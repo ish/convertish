@@ -130,5 +130,17 @@ class TestConverters(unittest.TestCase):
         actual = string_converter(type).to_type(value)
         self.assertEquals(actual,expected)
 
+    def test_tuple_noneifying(self):
+        schema = schemaish.Tuple([schemaish.Integer(), schemaish.String()])
+        converter = string_converter(schema)
+        self.assertEquals(converter.from_type((None, None)), ',')
+        self.assertEquals(converter.from_type((None, '')), ',')
+        self.assertEquals(converter.from_type((None, 'foo')), ',foo')
+        self.assertEquals(converter.from_type((1, None)), '1,')
+        self.assertEquals(converter.to_type(','), (None, None))
+        self.assertEquals(converter.to_type(',foo'), (None, 'foo'))
+        self.assertEquals(converter.to_type('1,'), (1, None))
+
+
 if __name__ == '__main__':
     unittest.main()

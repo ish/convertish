@@ -315,11 +315,14 @@ class SequenceToStringConverter(Converter):
                     for v in out]
 
 
-
 class TupleToStringConverter(Converter):
     """
-    I'd really like to have the converter options on the init but ruledispatch
+    Convert a tuple to and from a string.
+
+    XXX tim: I'd really like to have the converter options on the init but ruledispatch
     won't let me pass keyword arguments
+    XXX matt: the default to_type items should be configurable but None is
+    better than '' because it doesn't crash the item's converter ;-).
     """
     
     def __init__(self, schema_type, **k):
@@ -331,10 +334,7 @@ class TupleToStringConverter(Converter):
         delimiter = converter_options.get('delimiter',',')
         lineitems =  [string_converter(self.schema_type.attrs[n]).from_type(item) \
                       for n,item in enumerate(value)]
-        linestring = convert_list_to_csvrow(lineitems, delimiter=delimiter)
-
-        return linestring
-        
+        return convert_list_to_csvrow(lineitems, delimiter=delimiter)
     
     def to_type(self, value, converter_options={}):
         if value is None:
@@ -346,9 +346,12 @@ class TupleToStringConverter(Converter):
             raise ConvertError('Too many arguments')
         if len(l) < len(self.schema_type.attrs):
             raise ConvertError('Too few arguments')
-        convl = [string_converter(self.schema_type.attrs[n]).to_type(v) \
-                 for n,v in enumerate(l)]
-        return tuple(convl)
+        def convert_or_none(n, v):
+            v = v.strip()
+            if not v:
+                return None
+            return string_converter(self.schema_type.attrs[n]).to_type(v)
+        return tuple(convert_or_none(n, v) for (n, v) in enumerate(l))
 
 
 class TupleToListConverter(Converter):
