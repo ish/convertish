@@ -356,7 +356,7 @@ class TupleToStringConverter(Converter):
 
 class TupleToListConverter(Converter):
 
-    def __init__(self, schem_type, **k):
+    def __init__(self, schema_type, **k):
         Converter.__init__(self, schema_type, **k)
 
     def from_type(self, value, converter_options={}):
