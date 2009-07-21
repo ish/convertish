@@ -1,3 +1,4 @@
+from cStringIO import StringIO
 from simplegeneric import generic
 import schemaish
 
@@ -91,17 +92,31 @@ if haveDecimal:
 
 
 class FileToStringConverter(Converter):
+    """
+    Convert between a text File and a string.
+
+    The file's content is assumed to be a UTF-8 encoded string. Anything else
+    will almost certainly break the code and/or page.
+
+    Converting from a string to a File instance returns a new File with a
+    default name, content.txt, of type text/plain.
+    """
     
     def from_type(self, value, converter_options={}):
         if value is None:
             return None
-        return value.filename
+        if not value.file:
+            raise ValueError('Cannot convert to string without a file-like '
+                             'object to read from')
+        return value.file.read().decode('utf-8')
         
     def to_type(self, value, converter_options={}):
         if value is None:
             return None
         value = value.strip()
-        return schemaish.type.File(None,value,None)
+        return schemaish.type.File(StringIO(value.encode('utf-8')),
+                                   'content.txt', 'text/plain')
+
     
 class BooleanToStringConverter(Converter):
     
