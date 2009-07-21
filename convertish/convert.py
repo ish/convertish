@@ -238,21 +238,31 @@ def getDialect(delimiter=','):
 
 
 def convert_csvrow_to_list(row, delimiter=','):
-    dialect = getDialect(delimiter=delimiter)
     sf = StringIO()
-    csvReader = csv.reader(sf, dialect=dialect)
-    sf.write(row)
+    sf.write(row.encode('utf-8'))
     sf.seek(0,0)
-    return csvReader.next()
+    reader = csv.reader(sf, dialect=getDialect(delimiter=delimiter))
+    return list(_decode_row(reader.next()))
 
     
 def convert_list_to_csvrow(l, delimiter=','):
-    dialect = getDialect(delimiter=delimiter)
     sf = StringIO()
-    writer = csv.writer(sf, dialect=dialect)
-    writer.writerow(l)
+    writer = csv.writer(sf, dialect=getDialect(delimiter=delimiter))
+    writer.writerow(list(_encode_row(l)))
     sf.seek(0,0)
-    return sf.read().strip()
+    return sf.read().strip().decode('utf-8')
+
+
+def _encode_row(row, encoding='utf-8'):
+    for cell in row:
+        if cell is not None:
+            cell = cell.encode(encoding)
+        yield cell
+
+
+def _decode_row(row, encoding='utf-8'):
+    for cell in row:
+        yield cell.decode(encoding)
 
         
 class SequenceToStringConverter(Converter):

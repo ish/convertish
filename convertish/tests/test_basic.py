@@ -1,3 +1,5 @@
+# -*- coding: utf-8
+
 from cStringIO import StringIO
 import unittest
 import schemaish
@@ -146,6 +148,12 @@ class TestConverters(unittest.TestCase):
         value, expected = expected, value
         actual = string_converter(type).to_type(value)
         self.assertEquals(actual,expected)
+
+    def test_tuple_unicode(self):
+        schema = schemaish.Tuple([schemaish.String(), schemaish.String()])
+        converter = string_converter(schema)
+        self.assertEquals(converter.from_type(('£1'.decode('utf-8'), u'foo')), '£1,foo'.decode('utf-8'))
+        self.assertEquals(converter.to_type('£1,foo'.decode('utf-8')), ('£1'.decode('utf-8'), u'foo'))
 
     def test_tuple_noneifying(self):
         schema = schemaish.Tuple([schemaish.Integer(), schemaish.String()])
