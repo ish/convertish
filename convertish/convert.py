@@ -1,3 +1,4 @@
+from cStringIO import StringIO
 from simplegeneric import generic
 import schemaish
 
@@ -21,6 +22,11 @@ class ConvertError(Exception):
     def __str__(self):
         return self.message
     __unicode__ = __str__
+
+    # Hide Python 2.6 deprecation warnings.
+    def _get_message(self): return self._message
+    def _set_message(self, message): self._message = message
+    message = property(_get_message, _set_message)
 
 
 class Converter(object):
@@ -86,17 +92,31 @@ if haveDecimal:
 
 
 class FileToStringConverter(Converter):
+    """
+    Convert between a text File and a string.
+
+    The file's content is assumed to be a UTF-8 encoded string. Anything else
+    will almost certainly break the code and/or page.
+
+    Converting from a string to a File instance returns a new File with a
+    default name, content.txt, of type text/plain.
+    """
     
     def from_type(self, value, converter_options={}):
         if value is None:
             return None
-        return value.filename
+        if not value.file:
+            raise ValueError('Cannot convert to string without a file-like '
+                             'object to read from')
+        return value.file.read().decode('utf-8')
         
     def to_type(self, value, converter_options={}):
         if value is None:
             return None
         value = value.strip()
-        return schemaish.type.File(None,value,None)
+        return schemaish.type.File(StringIO(value.encode('utf-8')),
+                                   'content.txt', 'text/plain')
+
     
 class BooleanToStringConverter(Converter):
     
@@ -310,11 +330,14 @@ class SequenceToStringConverter(Converter):
                     for v in out]
 
 
-
 class TupleToStringConverter(Converter):
     """
-    I'd really like to have the converter options on the init but ruledispatch
+    Convert a tuple to and from a string.
+
+    XXX tim: I'd really like to have the converter options on the init but ruledispatch
     won't let me pass keyword arguments
+    XXX matt: the default to_type items should be configurable but None is
+    better than '' because it doesn't crash the item's converter ;-).
     """
     
     def __init__(self, schema_type, **k):
@@ -326,10 +349,7 @@ class TupleToStringConverter(Converter):
         delimiter = converter_options.get('delimiter',',')
         lineitems =  [string_converter(self.schema_type.attrs[n]).from_type(item) \
                       for n,item in enumerate(value)]
-        linestring = convert_list_to_csvrow(lineitems, delimiter=delimiter)
-
-        return linestring
-        
+        return convert_list_to_csvrow(lineitems, delimiter=delimiter)
     
     def to_type(self, value, converter_options={}):
         if value is None:
@@ -341,14 +361,17 @@ class TupleToStringConverter(Converter):
             raise ConvertError('Too many arguments')
         if len(l) < len(self.schema_type.attrs):
             raise ConvertError('Too few arguments')
-        convl = [string_converter(self.schema_type.attrs[n]).to_type(v) \
-                 for n,v in enumerate(l)]
-        return tuple(convl)
+        def convert_or_none(n, v):
+            v = v.strip()
+            if not v:
+                return None
+            return string_converter(self.schema_type.attrs[n]).to_type(v)
+        return tuple(convert_or_none(n, v) for (n, v) in enumerate(l))
 
 
 class TupleToListConverter(Converter):
 
-    def __init__(self, schem_type, **k):
+    def __init__(self, schema_type, **k):
         Converter.__init__(self, schema_type, **k)
 
     def from_type(self, value, converter_options={}):

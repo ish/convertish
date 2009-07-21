@@ -1,5 +1,7 @@
+from cStringIO import StringIO
 import unittest
 import schemaish
+import schemaish.type
 from datetime import date
 from convertish.convert import string_converter, datetuple_converter, ConvertError
 
@@ -72,6 +74,21 @@ class TestConverters(unittest.TestCase):
         actual = string_converter(type).to_type(value)
         self.assertEquals(actual,expected)
 
+    def test_file_string_converstion(self):
+        # Just for my sanity.
+        FileType = schemaish.type.File
+        # Reference type.
+        type = schemaish.File()
+        # Check that it can't be converted without a file-like.
+        self.assertRaises(ValueError, string_converter(type).from_type,
+                          FileType(None, None, None))
+        # Check that the file-likes content are returned.
+        self.assertTrue(string_converter(type).from_type(FileType(StringIO('foo'), None, None)) == 'foo')
+        # Check that a string is converted to a file.
+        file = string_converter(type).to_type('foo')
+        self.assertTrue(file.mimetype == 'text/plain')
+        self.assertTrue(file.filename == 'content.txt')
+        self.assertTrue(file.file.read() == 'foo')
 
     def test_date_datetuple_conversion(self):
         type = schemaish.Date()
@@ -129,6 +146,18 @@ class TestConverters(unittest.TestCase):
         value, expected = expected, value
         actual = string_converter(type).to_type(value)
         self.assertEquals(actual,expected)
+
+    def test_tuple_noneifying(self):
+        schema = schemaish.Tuple([schemaish.Integer(), schemaish.String()])
+        converter = string_converter(schema)
+        self.assertEquals(converter.from_type((None, None)), ',')
+        self.assertEquals(converter.from_type((None, '')), ',')
+        self.assertEquals(converter.from_type((None, 'foo')), ',foo')
+        self.assertEquals(converter.from_type((1, None)), '1,')
+        self.assertEquals(converter.to_type(','), (None, None))
+        self.assertEquals(converter.to_type(',foo'), (None, 'foo'))
+        self.assertEquals(converter.to_type('1,'), (1, None))
+
 
 if __name__ == '__main__':
     unittest.main()

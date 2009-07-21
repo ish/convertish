@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: convertish
-Version: 0.5.4
+Version: 0.6dev
 Summary: Convertish is a type conversion library with converters for basic types
 Home-page: http://ish.io/projects/show/convertish
 Author: Tim Parkin, Matt Goodall

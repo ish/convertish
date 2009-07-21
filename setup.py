@@ -29,9 +29,12 @@ Convertish uses adaption to coerce variable types. It currently has converters r
       zip_safe=False,
       install_requires=[
           # -*- Extra requirements: -*-
+          "schemaish",
           "simplegeneric",
+          "validatish",
       ],
       entry_points="""
       # -*- Entry points: -*-
       """,
+      test_suite='convertish.tests',
       )
