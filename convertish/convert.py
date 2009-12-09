@@ -13,6 +13,8 @@ try:
 except ImportError:
     haveDecimal = False
 
+from convertish.util import SimpleTZInfo
+
 
 class ConvertError(Exception):
     """
@@ -182,11 +184,26 @@ class TimeToStringConverter(Converter):
         
     def parseTime(self, value):
         
+        # Parse the timezone offset
+        if '+' in value:
+            value, tz = value.split('+')
+            tzdir = 1
+        elif '-' in value:
+            value, tz = value.split('-')
+            tzdir = -1
+        else:
+            tz = None
+        if tz:
+            hours, minutes = tz.split(':')
+            tz = SimpleTZInfo(tzdir*((int(hours)*60) + int(minutes)))
+
+        # Parse milliseconds.
         if '.' in value:
             value, ms = value.split('.')
         else:
             ms = 0
             
+        # Parse hours, minutes and seconds.
         try:
             parts = value.split(':')  
             if len(parts)<2 or len(parts)>3:
@@ -201,7 +218,7 @@ class TimeToStringConverter(Converter):
             raise ConvertError('Invalid time')
         
         try:
-            value = time(h, m, s, ms)
+            value = time(h, m, s, ms, tz)
         except ValueError, e:
             raise ConvertError('Invalid time: '+str(e))
             
