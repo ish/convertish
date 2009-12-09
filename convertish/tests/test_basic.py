@@ -4,7 +4,7 @@ from cStringIO import StringIO
 import unittest
 import schemaish
 import schemaish.type
-from datetime import date
+from datetime import date, time
 from convertish.convert import string_converter, datetuple_converter, ConvertError
 
 
@@ -165,6 +165,17 @@ class TestConverters(unittest.TestCase):
         self.assertEquals(converter.to_type(','), (None, None))
         self.assertEquals(converter.to_type(',foo'), (None, 'foo'))
         self.assertEquals(converter.to_type('1,'), (1, None))
+
+    def test_time_string_conversion(self):
+        schema = schemaish.Time()
+        converter = string_converter(schema)
+        tests = [(time(1), '01:00:00'),
+                 (time(1, 2), '01:02:00'),
+                 (time(1, 2, 3), '01:02:03'),
+                 (time(1, 2, 3, 4), '01:02:03.000004')]
+        for t, s in tests:
+            self.assertEquals(converter.from_type(t), s)
+            self.assertEquals(converter.to_type(s), t)
 
 
 if __name__ == '__main__':
