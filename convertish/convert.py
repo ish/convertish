@@ -1,4 +1,9 @@
+__all__ = ['string_converter', 'datetuple_converter', 'boolean_converter',
+           'file_converter','json_converter']
+
+import csv
 from cStringIO import StringIO
+from datetime import date, time
 from simplegeneric import generic
 import schemaish
 
@@ -7,7 +12,8 @@ try:
     haveDecimal = True
 except ImportError:
     haveDecimal = False
-from datetime import date, time
+
+from convertish.util import SimpleTZInfo
 
 
 class ConvertError(Exception):
@@ -45,7 +51,9 @@ class Converter(object):
         convert to i.e. for NumberToString converter - to number from string
         """
 
+
 class NullConverter(Converter):
+
     def from_type(self, value, converter_options={}):
         return value
     
@@ -54,6 +62,7 @@ class NullConverter(Converter):
 
 
 class NumberToStringConverter(Converter):
+
     cast = None
     type_string = 'number'
     
@@ -88,7 +97,6 @@ class FloatToStringConverter(NumberToStringConverter):
 if haveDecimal:
     class DecimalToStringConverter(NumberToStringConverter):
         cast = decimal.Decimal
-
 
 
 class FileToStringConverter(Converter):
@@ -134,6 +142,7 @@ class BooleanToStringConverter(Converter):
         if value not in ('True', 'False'):
             raise ConvertError('%r should be either True or False'%value)
         return value == 'True'
+
     
 class DateToStringConverter(Converter):
     
@@ -175,11 +184,26 @@ class TimeToStringConverter(Converter):
         
     def parseTime(self, value):
         
+        # Parse the timezone offset
+        if '+' in value:
+            value, tz = value.split('+')
+            tzdir = 1
+        elif '-' in value:
+            value, tz = value.split('-')
+            tzdir = -1
+        else:
+            tz = None
+        if tz:
+            hours, minutes = tz.split(':')
+            tz = SimpleTZInfo(tzdir*((int(hours)*60) + int(minutes)))
+
+        # Parse milliseconds.
         if '.' in value:
             value, ms = value.split('.')
         else:
             ms = 0
             
+        # Parse hours, minutes and seconds.
         try:
             parts = value.split(':')  
             if len(parts)<2 or len(parts)>3:
@@ -194,12 +218,11 @@ class TimeToStringConverter(Converter):
             raise ConvertError('Invalid time')
         
         try:
-            value = time(h, m, s, ms)
+            value = time(h, m, s, ms, tz)
         except ValueError, e:
             raise ConvertError('Invalid time: '+str(e))
             
         return value
- 
 
     
 class DateToDateTupleConverter(Converter):
@@ -221,38 +244,42 @@ class DateToDateTupleConverter(Converter):
         except (TypeError, ValueError), e:
             raise ConvertError('Invalid date: '+str(e))
         return value
-        
-
 
 
 def getDialect(delimiter=','):
-    import csv
     class Dialect(csv.excel):
         def __init__(self, *a, **k):
             self.delimiter = k.pop('delimiter',',')
             csv.excel.__init__(self,*a, **k)
     return Dialect(delimiter=delimiter)
 
+
 def convert_csvrow_to_list(row, delimiter=','):
-    import cStringIO as StringIO
-    import csv
-    dialect = getDialect(delimiter=delimiter)
-    sf = StringIO.StringIO()
-    csvReader = csv.reader(sf, dialect=dialect)
-    sf.write(row)
+    sf = StringIO()
+    sf.write(row.encode('utf-8'))
     sf.seek(0,0)
-    return csvReader.next()
+    reader = csv.reader(sf, dialect=getDialect(delimiter=delimiter))
+    return list(_decode_row(reader.next()))
+
     
 def convert_list_to_csvrow(l, delimiter=','):
-    import cStringIO as StringIO
-    import csv
-    dialect = getDialect(delimiter=delimiter)
-    sf = StringIO.StringIO()
-    writer = csv.writer(sf, dialect=dialect)
-    writer.writerow(l)
+    sf = StringIO()
+    writer = csv.writer(sf, dialect=getDialect(delimiter=delimiter))
+    writer.writerow(list(_encode_row(l)))
     sf.seek(0,0)
-    return sf.read().strip()
+    return sf.read().strip().decode('utf-8')
 
+
+def _encode_row(row, encoding='utf-8'):
+    for cell in row:
+        if cell is not None:
+            cell = cell.encode(encoding)
+        yield cell
+
+
+def _decode_row(row, encoding='utf-8'):
+    for cell in row:
+        yield cell.decode(encoding)
 
         
 class SequenceToStringConverter(Converter):
@@ -293,7 +320,6 @@ class SequenceToStringConverter(Converter):
             value =  [string_converter(self.schema_type.attr).from_type(v) \
                       for v in value]
             return convert_list_to_csvrow(value, delimiter=delimiter)
-        
     
     def to_type(self, value, converter_options={}):
         if value is None:
@@ -385,17 +411,13 @@ class TupleToListConverter(Converter):
         return tuple(value)
 
 
-
 ####
 #
 #  String Converter
-
-    
     
 @generic
 def string_converter(schema_type):
     pass
-
 
 @string_converter.when_type(schemaish.String)
 def string_to_string(schema_type):
@@ -437,10 +459,10 @@ def boolean_to_string(schema_type):
 def file_to_string(schema_type):
     return FileToStringConverter(schema_type)
 
+
 ####
 #
 #  Date Tuple Converter
-
 
 @generic
 def datetuple_converter(schema_type):
@@ -450,10 +472,10 @@ def datetuple_converter(schema_type):
 def date_to_datetuple(schema_type):
     return DateToDateTupleConverter(schema_type)
 
+
 ####
 #
 #  Boolean Converter
-
 
 @generic
 def boolean_converter(schema_type):
@@ -462,8 +484,6 @@ def boolean_converter(schema_type):
 @boolean_converter.when_type(schemaish.Boolean)
 def boolean_to_boolean(schema_type):
     return NullConverter(schema_type)
-
-
 
 @generic
 def file_converter(schema_type):
@@ -498,6 +518,7 @@ class DateToJSONConverter(Converter):
         except (TypeError, ValueError), e:
             raise ConvertError('Invalid date: '+str(e))
         return value
+
 
 class TimeToJSONConverter(Converter):
     
@@ -565,10 +586,3 @@ def boolean_to_json(schema_type):
 def file_to_json(schema_type):
     return FileToStringConverter(schema_type)
 
-
-
-
-__all__ = [
-    'string_converter', 'datetuple_converter',
-    'boolean_converter', 'file_converter','json_converter'
-    ]
