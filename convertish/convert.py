@@ -3,7 +3,7 @@ __all__ = ['string_converter', 'datetuple_converter', 'boolean_converter',
 
 import csv
 from cStringIO import StringIO
-from datetime import date, time
+from datetime import date, datetime, time
 from simplegeneric import generic
 import schemaish
 
@@ -157,20 +157,9 @@ class DateToStringConverter(Converter):
         if value is None:
             return None
         value = value.strip()
-        return self.parseDate(value)
+        return _parse_date(value)
+
         
-    def parseDate(self, value):
-        try:
-            y, m, d = [int(p) for p in value.split('-')]
-        except ValueError:
-            raise ConvertError('Invalid date')
-        try:
-            value = date(y, m, d)
-        except ValueError, e:
-            raise ConvertError('Invalid date: '+str(e))
-        return value
-
-
 class TimeToStringConverter(Converter):
     
     def from_type(self, value, converter_options={}):
@@ -182,51 +171,77 @@ class TimeToStringConverter(Converter):
         if value is None:
             return None
         value = value.strip()
-        return self.parseTime(value)
+        return _parse_time(value)
         
-    def parseTime(self, value):
-        
-        # Parse the timezone offset
-        if '+' in value:
-            value, tz = value.split('+')
-            tzdir = 1
-        elif '-' in value:
-            value, tz = value.split('-')
-            tzdir = -1
-        else:
-            tz = None
-        if tz:
-            hours, minutes = tz.split(':')
-            tz = SimpleTZInfo(tzdir*((int(hours)*60) + int(minutes)))
 
-        # Parse milliseconds.
-        if '.' in value:
-            value, ms = value.split('.')
-        else:
-            ms = 0
-            
-        # Parse hours, minutes and seconds.
-        try:
-            parts = value.split(':')  
-            if len(parts)<2 or len(parts)>3:
-                raise ValueError()
-            if len(parts) == 2:
-                h, m = parts
-                s = 0
-            else:
-                h, m, s = parts
-            h, m, s, ms = int(h), int(m), int(s), int(ms)
-        except:
-            raise ConvertError('Invalid time')
-        
-        try:
-            value = time(h, m, s, ms, tz)
-        except ValueError, e:
-            raise ConvertError('Invalid time: '+str(e))
-            
-        return value
+class DateTimeToStringConverter(Converter):
+
+    def from_type(self, value, converter_options={}):
+        return value.isoformat()
+
+    def to_type(self, value, converter_options={}):
+        d, t = value.split('T')
+        d = _parse_date(d)
+        t = _parse_time(t)
+        return datetime(d.year, d.month, d.day, t.hour, t.minute, t.second,
+                        t.microsecond, t.tzinfo)
 
     
+def _parse_date(value):
+    try:
+        y, m, d = [int(p) for p in value.split('-')]
+    except ValueError:
+        raise ConvertError('Invalid date')
+    try:
+        value = date(y, m, d)
+    except ValueError, e:
+        raise ConvertError('Invalid date: '+str(e))
+    return value
+
+
+def _parse_time(value):
+    
+    # Parse the timezone offset
+    if '+' in value:
+        value, tz = value.split('+')
+        tzdir = 1
+    elif '-' in value:
+        value, tz = value.split('-')
+        tzdir = -1
+    else:
+        tz = None
+    if tz:
+        hours, minutes = tz.split(':')
+        tz = SimpleTZInfo(tzdir*((int(hours)*60) + int(minutes)))
+
+    # Parse milliseconds.
+    if '.' in value:
+        value, ms = value.split('.')
+    else:
+        ms = 0
+        
+    # Parse hours, minutes and seconds.
+    try:
+        parts = value.split(':')  
+        if len(parts)<2 or len(parts)>3:
+            raise ValueError()
+        if len(parts) == 2:
+            h, m = parts
+            s = 0
+        else:
+            h, m, s = parts
+        h, m, s, ms = int(h), int(m), int(s), int(ms)
+    except:
+        raise ConvertError('Invalid time')
+    
+    try:
+        value = time(h, m, s, ms, tz)
+    except ValueError, e:
+        raise ConvertError('Invalid time: '+str(e))
+        
+    return value
+
+
 class DateToDateTupleConverter(Converter):
     
     def from_type(self, value, converter_options={}):
@@ -444,6 +459,10 @@ def date_to_string(schema_type):
 @string_converter.when_type(schemaish.Time)
 def time_to_string(schema_type):
     return TimeToStringConverter(schema_type)
+
+@string_converter.when_type(schemaish.DateTime)
+def datetime_to_string(schema_type):
+    return DateTimeToStringConverter(schema_type)
 
 @string_converter.when_type(schemaish.Sequence)
 def sequence_to_string(schema_type):

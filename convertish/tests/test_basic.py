@@ -4,7 +4,7 @@ from cStringIO import StringIO
 import unittest
 import schemaish
 import schemaish.type
-from datetime import date, time
+from datetime import date, datetime, time
 
 from convertish.convert import string_converter, datetuple_converter, ConvertError
 from convertish.util import SimpleTZInfo
@@ -179,6 +179,19 @@ class TestConverters(unittest.TestCase):
                  (time(1, 2, 0, 0, tz), '01:02:00+01:30'),
                  (time(1, 2, 3, 0, tz), '01:02:03+01:30'),
                  (time(1, 2, 3, 4, tz), '01:02:03.000004+01:30')]
+        for t, s in tests:
+            self.assertEquals(converter.from_type(t), s)
+            self.assertEquals(converter.to_type(s), t)
+
+    def test_datetime_string_conversion(self):
+        schema = schemaish.DateTime()
+        converter = string_converter(schema)
+        tz = SimpleTZInfo(90)
+        tests = [(datetime(2001, 2, 3, 4, 5, 6), '2001-02-03T04:05:06'),
+                 (datetime(2001, 2, 3), '2001-02-03T00:00:00'),
+                 (datetime(2001, 2, 3, 4, 5, 6, 7), '2001-02-03T04:05:06.000007'),
+                 (datetime(2001, 2, 3, 4, 5, 6, tzinfo=tz), '2001-02-03T04:05:06+01:30'),
+                ]
         for t, s in tests:
             self.assertEquals(converter.from_type(t), s)
             self.assertEquals(converter.to_type(s), t)
