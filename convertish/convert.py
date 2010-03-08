@@ -45,11 +45,13 @@ class Converter(object):
         """
         convert from i.e. for NumberToString converter - from number to string
         """
+        raise NotImplementedError()
     
     def to_type(self, value, converter_options={}):
         """
         convert to i.e. for NumberToString converter - to number from string
         """
+        raise NotImplementedError()
 
 
 class NullConverter(Converter):
