@@ -1,5 +1,5 @@
 __all__ = ['string_converter', 'datetuple_converter', 'boolean_converter',
-           'file_converter','json_converter']
+           'file_converter','json_converter', 'converter']
 
 import csv
 from cStringIO import StringIO
@@ -409,6 +409,20 @@ class TupleToListConverter(Converter):
         if value is None:
             return None
         return tuple(value)
+
+def converter(type):
+    if type == 'string':
+        return string_converter
+    if type == 'json':
+        return json_converter
+    if type == 'datetuple':
+        return datetuple_converter
+    if type == 'boolean':
+        return booleank_converter
+    if type == 'file':
+        return file_converter
+    else:
+        raise ValueError('no type converter for %s'%type)
 
 
 ####
