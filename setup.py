@@ -1,13 +1,13 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.5.5'
+version = '0.5.6'
 
 setup(name='convertish',
       version=version,
       description="Convertish is a type conversion library with converters for basic types",
       long_description="""\
-Convertish uses adaption to coerce variable types. It currently has converters registered for schemaish types but is easily extended. It currently has a converter which can serialise most objects to strings. The library should be very easy to extend to convert to / from most types. 
+Convertish uses adaption to coerce variable types. It currently has converters registered for schemaish types but is easily extended. It currently has a converter which can serialise most objects to strings. The library should be very easy to extend to convert to / from most types.
 
       Changlog at `http://github.com/ish/convertish/raw/master/CHANGELOG <http://github.com/ish/convertish/raw/master/CHANGELOG>`_
 """,
@@ -18,7 +18,7 @@ Convertish uses adaption to coerce variable types. It currently has converters r
           "Environment :: Web Environment",
           "Operating System :: OS Independent",
           "Programming Language :: Python :: 2",
-      ], 
+      ],
       keywords='convert conversion coercion adapt adaption schema',
       author='Tim Parkin, Matt Goodall',
       author_email='developers@ish.io',
