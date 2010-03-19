@@ -2,7 +2,9 @@ import csv
 from cStringIO import StringIO
 from datetime import date, datetime, time
 import schemaish
+
 import ConfigParser
+import yaml
 
 try:
     import decimal
@@ -12,6 +14,10 @@ except ImportError:
 
 from convertish.convert import BaseConverter, ConvertError
 from convertish.util import SimpleTZInfo
+
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class NumberToStringConverter(BaseConverter):
@@ -31,6 +37,7 @@ class NumberToStringConverter(BaseConverter):
         # Python's decimal.Decimal type raises an ArithmeticError when it's
         # given a dodgy data.
         data = data.strip()
+        log.info('DATA in number converter %s'%data)
         try:
             data = self.cast(data)
         except (ValueError, ArithmeticError):
@@ -371,6 +378,36 @@ class StructureINIConverter(BaseConverter):
 
     def to_type(self, schema, data, converter, k):
         pass
+
+class StructureYAMLConverter(BaseConverter):
+
+
+    def from_type(self, schema, data, converter, k):
+        out = {}
+        for n,attr in schema.attrs:
+            out[n] = converter.from_type(attr, data[n], converter, k=k+[n])
+        return yaml.dump(out)
+
+    def to_type(self, schema, data, converter, k):
+        d = yaml.load(data)
+        return dict([(n,converter.to_type(attr, d[n], converter, k=k+[n])) for n, attr in schema.attrs])
+
+class SequenceYAMLConverter(BaseConverter):
+
+
+    def from_type(self, schema, data, converter, k):
+        out = []
+        log.info('data %s'%data)
+        for n,item in enumerate(data):
+            out.append(converter.from_type(schema.attr, item, converter, k=k+[n]))
+        return yaml.dump(out)
+
+    def to_type(self, schema, data, converter, k):
+        d = yaml.load(data)
+        log.info('loaded data %s'%d)
+        return [converter.to_type(schema.attr, item, converter, k=k+[n]) for n, item in enumerate(d)]
+
+
 
 class TupleNullConverter(BaseConverter):
 

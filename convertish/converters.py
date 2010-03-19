@@ -72,6 +72,7 @@ scalar_string_registry = {
   schemaish.Sequence: string_convert.SequenceNullConverter(),
   schemaish.Time: string_convert.TimeToStringConverter(),
   schemaish.Tuple: string_convert.TupleNullConverter(),
+  schemaish.Structure: string_convert.StructureNullConverter(),
 }
 
 string_registry = {
@@ -117,3 +118,12 @@ ini_registry.update({
 
 class INIConverter(Converter):
      registry = ini_registry
+
+yaml_registry = {
+    schemaish.Structure: string_convert.StructureYAMLConverter(),
+    schemaish.Sequence: string_convert.SequenceYAMLConverter(),
+    '*': ScalarStringConverter(),
+}
+
+class YAMLConverter(Converter):
+     registry = yaml_registry
