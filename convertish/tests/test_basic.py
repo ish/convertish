@@ -337,14 +337,14 @@ class TestRegistryFind(unittest.TestCase):
         C = get_converter(schemaish.Tuple, self.registry_wildcard4, ['0'])
         self.assertEquals(C, 'Y')
 
-        self.assertRaises(NotImplementedError, get_converter, schemaish.Tuple,
-                         self.registry, ['1','1'])
-        self.assertRaises(NotImplementedError, get_converter, schemaish.Tuple,
-                         self.registry_wildcard1, ['0','2'])
-        self.assertRaises(NotImplementedError, get_converter, schemaish.Tuple,
-                         self.registry_wildcard3, ['0','2','4'])
-        self.assertRaises(NotImplementedError, get_converter, schemaish.Tuple,
-                         self.registry_wildcard3, ['0'])
+        self.assertRaises(NotImplementedError, get_converter,
+                          schemaish.Tuple, self.registry, ['1','1'])
+        self.assertRaises(NotImplementedError, get_converter,
+                          schemaish.Tuple, self.registry_wildcard1, ['0','2'])
+        self.assertRaises(NotImplementedError, get_converter,
+                          schemaish.Tuple, self.registry_wildcard3, ['0','2','4'])
+        self.assertRaises(NotImplementedError, get_converter,
+                          schemaish.Tuple, self.registry_wildcard3, ['0'])
 
 
 if __name__ == '__main__':

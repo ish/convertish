@@ -2,6 +2,7 @@ import csv
 from cStringIO import StringIO
 from datetime import date, datetime, time
 import schemaish
+import ConfigParser
 
 try:
     import decimal
@@ -351,6 +352,33 @@ class SequenceNullConverter(BaseConverter):
         return [converter.to_type(schema.attr, item, converter, k=k+[n]) for
                 n, item in enumerate(data)]
 
+class StructureNullConverter(BaseConverter):
+
+    def from_type(self, schema, data, converter, k):
+        if data is None:
+            return None
+        return dict([(n,converter.from_type(attr, data[n], converter, k=k+[n])) for n, attr in schema.attrs])
+
+    def to_type(self, schema, data, converter, k):
+        if data is None:
+            return None
+        return dict([(n,converter.to_type(attr, data[n], converter, k=k+[n])) for n, attr in schema.attrs])
+
+class StructureINIConverter(BaseConverter):
+
+    def from_type(self, schema, data, converter, k):
+        config = ConfigParser.RawConfigParser()
+        for K,attr in schema.attrs:
+            config.add_section(K)
+            for k, a in attr.attrs:
+                config.set(K,k,data[K][k])
+        f = StringIO()
+        config.write(f)
+        f.seek(0,0)
+        return f.read()
+
+    def to_type(self, schema, data, converter, k):
+        pass
 
 class TupleNullConverter(BaseConverter):
 
