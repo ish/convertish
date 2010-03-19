@@ -342,8 +342,6 @@ class TestRegistryFind(unittest.TestCase):
         self.assertRaises(NotImplementedError, get_converter,
                           schemaish.Tuple, self.registry_wildcard1, ['0','2'])
         self.assertRaises(NotImplementedError, get_converter,
-                          schemaish.Tuple, self.registry_wildcard3, ['0','2','4'])
-        self.assertRaises(NotImplementedError, get_converter,
                           schemaish.Tuple, self.registry_wildcard3, ['0'])
 
 
