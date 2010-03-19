@@ -376,8 +376,7 @@ class TupleNullConverter(BaseConverter):
 
     def from_type(self, schema, data, converter, k):
         return tuple([converter.from_type(schema.attrs[n], item, converter,
-                                          k=k+[n]) for n,
-    item in enumerate(data)])
+                                          k=k+[n]) for n, item in enumerate(data)])
 
     def to_type(self, schema, data, converter, k):
         return tuple([converter.to_type(schema.attrs[n], item, converter, k=k+[n]) for n,
