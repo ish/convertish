@@ -341,27 +341,19 @@ class TupleToStringConverter(BaseConverter):
 class SequenceNullConverter(BaseConverter):
 
     def from_type(self, schema, data, converter, k):
-        if data is None:
-            return None
         return [converter.from_type(schema.attr, item, converter, k=k+[n]) for
                 n, item in enumerate(data)]
 
     def to_type(self, schema, data, converter, k):
-        if data is None:
-            return None
         return [converter.to_type(schema.attr, item, converter, k=k+[n]) for
                 n, item in enumerate(data)]
 
 class StructureNullConverter(BaseConverter):
 
     def from_type(self, schema, data, converter, k):
-        if data is None:
-            return None
         return dict([(n,converter.from_type(attr, data[n], converter, k=k+[n])) for n, attr in schema.attrs])
 
     def to_type(self, schema, data, converter, k):
-        if data is None:
-            return None
         return dict([(n,converter.to_type(attr, data[n], converter, k=k+[n])) for n, attr in schema.attrs])
 
 class StructureINIConverter(BaseConverter):
@@ -383,15 +375,11 @@ class StructureINIConverter(BaseConverter):
 class TupleNullConverter(BaseConverter):
 
     def from_type(self, schema, data, converter, k):
-        if data is None:
-            return None
         return tuple([converter.from_type(schema.attrs[n], item, converter,
                                           k=k+[n]) for n,
     item in enumerate(data)])
 
     def to_type(self, schema, data, converter, k):
-        if data is None:
-            return None
         return tuple([converter.to_type(schema.attrs[n], item, converter, k=k+[n]) for n,
                 item in enumerate(data)])
 
