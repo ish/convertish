@@ -1,36 +1,28 @@
-
 import inspect
 import re
 
 import schemaish
 from convertish import string_convert, convert
-from dottedish import api
-
-
-def container_factory(parent_key, item_key):
-    return {}
-
-
 
 
 def get_converter(schema, registry, key):
+    # Use the key to see if we have a specific converter
     string_key = '.'.join([str(k) for k in key])
-    print 'KEY', string_key
-    print 'REG',registry
     matching_keys = {}
     for k,v in registry.items():
+        # filter out the string keys
         if isinstance(k, basestring):
             P = re.compile( '^%s$'%(k.replace('*','\w')) )
-            print 'k',k
-            print 'P',P.match(string_key)
-        if isinstance(k, basestring) and P.match(string_key):
-            matching_keys[k] = v
-    print 'MK',matching_keys
+            # filter out the matching keys
+            if P.match(string_key):
+                matching_keys[k] = v
     if matching_keys != {}:
         keys = matching_keys.keys()
+        # sort the matching keys for specificity
         keys.sort(reverse=True)
         return matching_keys[keys[0]]
 
+    # Check the mro (adaption like check)
     for t in inspect.getmro(type(schema))[:-1]:
         if t in registry:
             return registry[t]
@@ -49,14 +41,12 @@ class Converter(object):
         if k is None:
             k = []
         converter = get_converter(schema, self.registry, k)
-        print 'CONVER',converter
         return converter.to_type(schema, data, self, k)
 
     def from_type(self, schema, data, converter=None, k=None):
         if k is None:
             k = []
         converter = get_converter(schema, self.registry, k)
-        print 'CONVER',converter
         return converter.from_type(schema, data, self, k)
 
 scalar_string_registry = {
@@ -90,8 +80,4 @@ class StringConverter(Converter):
 
 class ScalarStringConverter(Converter):
      registry = scalar_string_registry
-
-#json_converter = Converter({
-#    schemaish.Integer: string_convert.IntegerToStringConverter(),
-#})
 
