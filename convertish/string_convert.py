@@ -62,7 +62,7 @@ class FileToStringConverter(BaseConverter):
     default name, content.txt, of type text/plain.
     """
 
-    def from_type(self, schema, data, converter):
+    def from_type(self, schema, data, converter, k):
         if data is None:
             return None
         if not data.file:
@@ -70,7 +70,7 @@ class FileToStringConverter(BaseConverter):
                              'object to read from')
         return data.file.read().decode('utf-8')
 
-    def to_type(self, schema, data, converter):
+    def to_type(self, schema, data, converter, k):
         if data is None:
             return None
         data = data.strip()
@@ -80,14 +80,14 @@ class FileToStringConverter(BaseConverter):
 
 class BooleanToStringConverter(BaseConverter):
 
-    def from_type(self, schema, data, converter):
+    def from_type(self, schema, data, converter, k):
         if data is None:
             return None
         if data:
             return 'True'
         return 'False'
 
-    def to_type(self, schema, data, converter):
+    def to_type(self, schema, data, converter, k):
         if data is None:
             return None
         data = data.strip()
@@ -153,12 +153,12 @@ def _parse_time(data):
 
 class DateToStringConverter(BaseConverter):
 
-    def from_type(self, schema, data, converter):
+    def from_type(self, schema, data, converter, k):
         if data is None:
             return None
         return data.isoformat()
 
-    def to_type(self, schema, data, converter):
+    def to_type(self, schema, data, converter, k):
         if data is None:
             return None
         data = data.strip()
@@ -167,12 +167,12 @@ class DateToStringConverter(BaseConverter):
 
 class TimeToStringConverter(BaseConverter):
 
-    def from_type(self, schema, data, converter):
+    def from_type(self, schema, data, converter, k):
         if data is None:
             return None
         return data.isoformat()
 
-    def to_type(self, schema, data, converter):
+    def to_type(self, schema, data, converter, k):
         if data is None:
             return None
         data = data.strip()
@@ -181,10 +181,10 @@ class TimeToStringConverter(BaseConverter):
 
 class DateTimeToStringConverter(BaseConverter):
 
-    def from_type(self, schema, data, converter):
+    def from_type(self, schema, data, converter, k):
         return data.isoformat()
 
-    def to_type(self, schema, data, converter):
+    def to_type(self, schema, data, converter, k):
         d, t = data.split('T')
         d = _parse_date(d)
         t = _parse_time(t)
@@ -234,7 +234,7 @@ class SequenceToStringConverter(BaseConverter):
     won't let me pass keyword arguments
     """
 
-    def from_type(self, schema, data, converter):
+    def from_type(self, schema, data, converter, k):
         if data is None:
             return None
         delimiter = self.converter_options.get('delimiter',',')
@@ -250,7 +250,7 @@ class SequenceToStringConverter(BaseConverter):
             return '\n'.join(out)
         elif isinstance(schema.attr, schemaish.Tuple):
             out = []
-            for n, line in enumerat(data):
+            for n, line in enumerate(data):
                 lineitems =  [
               converter.from_type(schema.attr.attrs[n], item, converter, k=k+[n]) \
                     for n,item in enumerate(line) ]

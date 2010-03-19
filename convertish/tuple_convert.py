@@ -5,12 +5,12 @@ from convertish.convert import BaseConverter, ConvertError
 
 class DateToDateTupleConverter(BaseConverter):
 
-    def from_type(self, schema, data, converter):
+    def from_type(self, schema, data, converter, k):
         if data is None:
             return None
         return data.year, data.month, data.day
 
-    def to_type(self, schema, data, converter):
+    def to_type(self, schema, data, converter, k):
         if data is None:
             return None
         try:

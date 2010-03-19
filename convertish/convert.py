@@ -24,13 +24,13 @@ class BaseConverter(object):
     def __init__(self, **kw):
         self.converter_options = kw.pop('converter_options', {})
 
-    def from_type(self, schema, data, converter):
+    def from_type(self, schema, data, converter, k):
         """
         convert from i.e. for NumberToString converter - from number to string
         """
         raise NotImplementedError()
 
-    def to_type(self, schema, data, converter):
+    def to_type(self, schema, data, converter, k):
         """
         convert to i.e. for NumberToString converter - to number from string
         """
@@ -39,10 +39,10 @@ class BaseConverter(object):
 
 class NullConverter(BaseConverter):
 
-    def from_type(self, schema, value, converter):
+    def from_type(self, schema, value, converter, k):
         return value
 
-    def to_type(self, schema, value, converter):
+    def to_type(self, schema, value, converter, k):
         return value
 
 
