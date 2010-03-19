@@ -91,21 +91,32 @@ A basic registry just lists the schema types and what converter should be used t
                 raise ConvertError('%r should be either True or False'%data)
             return data == 'True'
 
-The converters don't just handle 'leaf' nodes, they should also handle parents too.. e.g. 
+The converters don't just handle 'leaf' nodes, they should also handle nodes with children too.. e.g. 
 
 .. code-block:: python
 
     class SequenceNullConverter(BaseConverter):
 
-        def from_type(self, schema, data, converter, k):
-            return [converter.from_type(schema.attr, item, converter, k=k+[n]) for
-                    n, item in enumerate(data)]
+        def from_type(self, schema, data, converter, key):
+            out = []
+            child_schema_type = schema.attr
+            for n, value in enumerate(data):
+                new_key = key+[n]
+                new_value = converter.from_type(child_schema_type, value, converter, new_key)
+                out.append(new_value)
+            return out
 
         def to_type(self, schema, data, converter, k):
-            return [converter.to_type(schema.attr, item, converter, k=k+[n]) for
-                    n, item in enumerate(data)]
+            out = []
+            child_schema_type = schema.attr
+            for n, value in enumerate(data):
+                new_key = key+[n]
+                new_value = converter.to_type(child_schema_type, value, converter, new_key)
+                out.append(new_value)
+            return out
 
-The above converter leaves any sequences along but calls the converters on each of the sequences items.
+
+The above converter leaves any sequences alone but calls the converters on each of the sequences items.
 
 A converter should call out to handle any of it's children (apart from very special cases). You can see tha the key is being appended to each time the sub converter is called.
 
@@ -117,16 +128,17 @@ Here is a full registry which converts all leaf nodes to strings but leaves stru
 .. code-block:: python
 
     scalar_string_registry = {
-        schemaish.Integer: string_convert.IntegerToStringConverter(),
-        schemaish.String: convert.NullConverter(),
-        schemaish.Float: string_convert.FloatToStringConverter(),
-        schemaish.Date: string_convert.DateToStringConverter(),
-        schemaish.Boolean: string_convert.BooleanToStringConverter(),
-        schemaish.File: string_convert.FileToStringConverter(),
-        schemaish.DateTime: string_convert.DateTimeToStringConverter(),
-        schemaish.Sequence: string_convert.SequenceNullConverter(),
-        schemaish.Time: string_convert.TimeToStringConverter(),
-        schemaish.Tuple: string_convert.TupleNullConverter(),
+        schemaish.String:    convert.NullConverter(),
+        schemaish.Integer:   string_convert.IntegerToStringConverter(),
+        schemaish.Float:     string_convert.FloatToStringConverter(),
+        schemaish.Boolean:   string_convert.BooleanToStringConverter(),
+        schemaish.Date:      string_convert.DateToStringConverter(),
+        schemaish.DateTime:  string_convert.DateTimeToStringConverter(),
+        schemaish.Time:      string_convert.TimeToStringConverter(),
+        schemaish.File:      string_convert.FileToStringConverter(),
+        schemaish.Sequence:  string_convert.SequenceNullConverter(),
+        schemaish.Tuple:     string_convert.TupleNullConverter(),
+        schemaish.Structure: string_convert.StructureNullConverter(),
     }
 
 We create a Converter from this registry as follows
@@ -136,7 +148,7 @@ We create a Converter from this registry as follows
     class ScalarStringConverter(Converter):
         registry = scalar_string_registry
 
-For most uses, these types of 'adapter' style registrys are more than enough. However, in some cases you might wish to change the way adapters work for particular keys or patterns. In order to do this, you can use a string as a key in the registry and this string will be used as a pattern match for the key at the point of conversion. 
+For most uses, these types of 'adapter' style registrys are adequate. However, in some cases you might wish to change the way adapters work for particular keys or patterns. In order to do this, you can use a string as a key in the registry and this string will be used as a pattern matcher for the key at the point of conversion. The following ini style converter demonstrates the need for this pattern of use. 
 
 An 'ini' converter
 ------------------
@@ -154,9 +166,9 @@ For example, if we wanted to convert a set of values into a config parser style 
     class INIConverter(Converter):
          registry = ini_registry
 
-Where the StringConverter will convert everything it gets into a string serialisation. This ini file uses the scalar string registry as a base and then specialises it by serialising everything below two levels deep as strings and also passing any top level structures to an INIConverter. 
+Where the StringConverter will convert everything it gets into a string serialisation, sequences turned into csv style lists for instance, this ini file registry uses the scalar_string_registry as a base. (as ssen previously in the full registry section). The registry is then specialised by serialising everything two levels deep and below as strings and also passing any top level structure types to an INIConverter. 
 
-The INIConverter uses ConfigParser as follows..
+The INIConverter uses ConfigParser to do it's final serialisation as follows
 
 .. code-block:: python
 
@@ -174,3 +186,51 @@ The INIConverter uses ConfigParser as follows..
             return f.read()
 
 
+
+YAML reader
+-----------
+
+If you use yaml without implicit type conversion you will receive your data back from the yaml load as a structure of strings (lists of strings and dictionaries of strings). Using the convertish and schemaish modules will allow you to load a yaml file according to a schema. 
+
+.. code-block:: python
+
+    class StructureYAMLConverter(BaseConverter):
+
+        def from_type(self, schema, data, converter, k):
+            out = {}
+            for n,attr in schema.attrs:
+                out[n] = converter.from_type(attr, data[n], converter, k=k+[n])
+            return yaml.dump(out)
+
+        def to_type(self, schema, data, converter, k):
+            d = yaml.load(data)
+            out = {}
+            for n, attr in schema.attrs:
+                out[n] = converter.to_type(attr, d[n], converter, k=k+[n])
+            return out
+
+    yaml_registry = {
+        schemaish.Structure: string_convert.StructureYAMLConverter(),
+        '*': ScalarStringConverter(),
+    }
+
+    class YAMLConverter(Converter):
+         registry = yaml_registry
+
+
+This only copes with structures at the top level of a yaml document, the actual code includes a registry entry to sequences also. To use this, you would do the following
+
+
+.. doctest::
+
+    >>> import convertish, schemaish
+    >>> schema = schemaish.Structure()
+    >>> schema.add('a', schemaish.Integer())
+    >>> data = {'a': 7}
+    >>> from convertish.converters import YAMLConverter
+    >>> YAMLConverter().from_type(schema, data)
+    "{b: '7'}\n"
+    >>> YAMLConverter().to_type(schema, "{b: '7'}\n")
+    {'b': 7}
+
+Setting up new converters is as simple as creating a new registry dictionary.
