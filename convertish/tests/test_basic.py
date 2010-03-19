@@ -7,7 +7,7 @@ import schemaish.type
 from datetime import date, datetime, time
 
 from convertish.convert import ConvertError
-from convertish.converters import Converter
+from convertish.converters import Converter, expand_registry, get_converter, ScalarStringConverter
 from convertish import string_convert, convert, tuple_convert
 from convertish.util import SimpleTZInfo
 
@@ -227,7 +227,7 @@ class TestSubregistryStringScalarConverters(unittest.TestCase):
       schemaish.DateTime: string_convert.DateTimeToStringConverter(),
       schemaish.Sequence: string_convert.SequenceNullConverter(),
       schemaish.Time: string_convert.TimeToStringConverter(),
-      schemaish.Tuple: Converter(),
+      schemaish.Tuple: ScalarStringConverter(),
     }
 
     def test_sequencesequenceinteger_string_conversion(self):
@@ -260,6 +260,82 @@ class TestTupleConverters(unittest.TestCase):
         value, expected = expected, value
         actual = converter.to_type(type, value)
         self.assertEquals(actual,expected)
+
+class TestKeyedRegistry(unittest.TestCase):
+
+    key_registry = {
+        schemaish.Integer: string_convert.IntegerToStringConverter(),
+        schemaish.Tuple: string_convert.TupleNullConverter(),
+        schemaish.Sequence: string_convert.SequenceNullConverter(),
+        '0': ScalarStringConverter(),
+    }
+
+    def test_simplekey(self):
+        type = schemaish.Sequence(schemaish.Tuple((schemaish.Integer(),
+                                                   schemaish.Integer())))
+        value = [(1,2),(4,5)]
+        expected = ['1,2',('4','5')]
+        converter = Converter(registry=self.key_registry)
+        actual = converter.from_type(type, value)
+        self.assertEquals(actual,expected)
+
+        value, expected = expected, value
+        actual = converter.to_type(type, value)
+        self.assertEquals(actual,expected)
+
+class TestRegistryExpand(unittest.TestCase):
+
+    registry = {
+        schemaish.Integer: string_convert.IntegerToStringConverter(),
+        schemaish.Tuple: string_convert.TupleNullConverter(),
+        '0.1': Converter(),
+    }
+
+    def test_registry_expansion(self):
+        R = expand_registry(self.registry)
+        self.assertTrue('0' in R)
+        self.assertTrue('1' in R['0'])
+
+class TestRegistryFind(unittest.TestCase):
+
+    registry = {
+        schemaish.Integer: string_convert.IntegerToStringConverter(),
+        schemaish.Tuple: string_convert.TupleNullConverter(),
+        '0.1': 'X',
+    }
+    registry_wildcard1 = {
+        schemaish.Integer: string_convert.IntegerToStringConverter(),
+        schemaish.Tuple: string_convert.TupleNullConverter(),
+        '*.1': 'X',
+    }
+    registry_wildcard2 = {
+        schemaish.Integer: string_convert.IntegerToStringConverter(),
+        schemaish.Tuple: string_convert.TupleNullConverter(),
+        '0.*': 'X',
+    }
+    registry_wildcard3 = {
+        schemaish.Integer: string_convert.IntegerToStringConverter(),
+        schemaish.Tuple: string_convert.TupleNullConverter(),
+        '*.*': 'X',
+    }
+
+    def test_registry_find(self):
+        C = get_converter(schemaish.Tuple, self.registry, ['0','1'])
+        self.assertEquals(C, 'X')
+        C = get_converter(schemaish.Tuple, self.registry_wildcard1, ['0','1'])
+        self.assertEquals(C, 'X')
+        C = get_converter(schemaish.Tuple, self.registry_wildcard2, ['0','1'])
+        self.assertEquals(C, 'X')
+        C = get_converter(schemaish.Tuple, self.registry_wildcard3, ['0','1'])
+        self.assertEquals(C, 'X')
+        self.assertRaises(NotImplementedError, get_converter, schemaish.Tuple,
+                         self.registry, ['1','1'])
+        self.assertRaises(NotImplementedError, get_converter, schemaish.Tuple,
+                         self.registry_wildcard1, ['0','2'])
+        self.assertRaises(NotImplementedError, get_converter, schemaish.Tuple,
+                         self.registry_wildcard3, ['0','2','4'])
+        self.assertRaises(NotImplementedError, get_converter, schemaish.Tuple,
+                         self.registry_wildcard3, ['0'])
 
 
 if __name__ == '__main__':

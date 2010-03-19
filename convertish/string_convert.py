@@ -18,12 +18,12 @@ class NumberToStringConverter(BaseConverter):
     cast = None
     type_string = 'number'
 
-    def from_type(self, schema, data, converter):
+    def from_type(self, schema, data, converter, k):
         if data is None:
             return None
         return str(data)
 
-    def to_type(self, schema, data, converter):
+    def to_type(self, schema, data, converter, k):
         if data is None:
             return None
         # "Cast" the data to the correct type. For some strange reason,
@@ -240,9 +240,9 @@ class SequenceToStringConverter(BaseConverter):
         delimiter = self.converter_options.get('delimiter',',')
         if isinstance(schema.attr, schemaish.Sequence):
             out = []
-            for line in data:
+            for n,line in enumerate(data):
                 lineitems =  [
-                  converter.from_type(schema.attr.attr, item, converter) \
+                  converter.from_type(schema.attr.attr, item, converter, k=k+[n]) \
                     for item in line]
                 linestring = convert_list_to_csvrow( \
                     lineitems, delimiter=delimiter)
@@ -250,9 +250,9 @@ class SequenceToStringConverter(BaseConverter):
             return '\n'.join(out)
         elif isinstance(schema.attr, schemaish.Tuple):
             out = []
-            for line in data:
+            for n, line in enumerat(data):
                 lineitems =  [
-              converter.from_type(schema.attr.attrs[n], item, converter) \
+              converter.from_type(schema.attr.attrs[n], item, converter, k=k+[n]) \
                     for n,item in enumerate(line) ]
                 linestring = convert_list_to_csvrow( \
                     lineitems, delimiter=delimiter)
@@ -260,11 +260,11 @@ class SequenceToStringConverter(BaseConverter):
             return '\n'.join(out)
 
         else:
-            data =  [converter.from_type(schema.attr, v, converter) \
-                      for v in data]
+            data =  [converter.from_type(schema.attr, v, converter, k=k+[n]) \
+                      for n, v in enumerate(data)]
             return convert_list_to_csvrow(data, delimiter=delimiter)
 
-    def to_type(self, schema, data, converter):
+    def to_type(self, schema, data, converter, k):
         if data is None:
             return None
         data = data.strip()
@@ -274,16 +274,16 @@ class SequenceToStringConverter(BaseConverter):
             for line in data.split('\n'):
                 l = convert_csvrow_to_list(line, delimiter=delimiter)
                 convl = [
-                 converter.to_type(schema.attr.attr, v, converter) \
-                         for v in l]
+                 converter.to_type(schema.attr.attr, v, converter, k=k+[n]) \
+                         for n, v in enumerate(l)]
                 out.append( convl )
             return out
         if isinstance(schema.attr, schemaish.Tuple):
             out = []
             for line in data.split('\n'):
                 l = convert_csvrow_to_list(line, delimiter=delimiter)
-                convl = [converter.to_type(schema.attr.attrs[n], v, converter) \
-                         for n,v in enumerate(l)]
+                convl = [converter.to_type(schema.attr.attrs[n], v, converter,
+                                          k=k+[n]) for n,v in enumerate(l)]
                 out.append( tuple(convl) )
             return out
         else:
@@ -295,8 +295,8 @@ class SequenceToStringConverter(BaseConverter):
             else:
                 out = convert_csvrow_to_list(data, delimiter=delimiter)
 
-            return [converter.to_type(schema.attr, v, converter) \
-                    for v in out]
+            return [converter.to_type(schema.attr, v, converter, k=k+[n]) \
+                    for n, v in enumerate(out)]
 
 
 class TupleToStringConverter(BaseConverter):
@@ -309,15 +309,16 @@ class TupleToStringConverter(BaseConverter):
     better than '' because it doesn't crash the item's converter ;-).
     """
 
-    def from_type(self, schema, data, converter):
+    def from_type(self, schema, data, converter, k):
         if data is None:
             return None
         delimiter = self.converter_options.get('delimiter',',')
-        lineitems =  [converter.from_type(schema.attrs[n], item, converter) \
+        lineitems =  [converter.from_type(schema.attrs[n], item, converter,
+                                          k=k+[n]) \
                       for n,item in enumerate(data)]
         return convert_list_to_csvrow(lineitems, delimiter=delimiter)
 
-    def to_type(self, schema, data, converter):
+    def to_type(self, schema, data, converter, k):
         if data is None:
             return None
         data = data.strip()
@@ -331,36 +332,39 @@ class TupleToStringConverter(BaseConverter):
             v = v.strip()
             if not v:
                 return None
-            return converter.to_type(schema.attrs[n], v, converter)
+            return converter.to_type(schema.attrs[n], v, converter, k=k+[n])
         return tuple(convert_or_none(n, v) for (n, v) in enumerate(l))
 
 
 
 class SequenceNullConverter(BaseConverter):
 
-    def from_type(self, schema, data, converter):
+    def from_type(self, schema, data, converter, k):
         if data is None:
             return None
-        return [converter.from_type(schema.attr, item, converter) for item in data]
+        return [converter.from_type(schema.attr, item, converter, k=k+[n]) for
+                n, item in enumerate(data)]
 
-    def to_type(self, schema, data, converter):
+    def to_type(self, schema, data, converter, k):
         if data is None:
             return None
-        return [converter.to_type(schema.attr, item, converter) for item in data]
+        return [converter.to_type(schema.attr, item, converter, k=k+[n]) for
+                n, item in enumerate(data)]
 
 
 class TupleNullConverter(BaseConverter):
 
-    def from_type(self, schema, data, converter):
+    def from_type(self, schema, data, converter, k):
         if data is None:
             return None
-        return tuple([converter.from_type(schema.attrs[n], item, converter) for n,
+        return tuple([converter.from_type(schema.attrs[n], item, converter,
+                                          k=k+[n]) for n,
     item in enumerate(data)])
 
-    def to_type(self, schema, data, converter):
+    def to_type(self, schema, data, converter, k):
         if data is None:
             return None
-        return tuple([converter.to_type(schema.attrs[n], item, converter) for n,
+        return tuple([converter.to_type(schema.attrs[n], item, converter, k=k+[n]) for n,
                 item in enumerate(data)])
 
 
