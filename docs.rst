@@ -234,3 +234,25 @@ This only copes with structures at the top level of a yaml document, the actual 
     {'b': 7}
 
 Setting up new converters is as simple as creating a new registry dictionary.
+
+notes
+-----
+
+The next step might be to hook the converters into schemaish using 
+
+schema.convert(data),to_type(YAMLConverter)?
+
+Is there any point?
+
+We also need to collect any conversion errors and store them in an errors dict.. 
+
+We also need to think about validation
+
+
+not sure we can cure Matt's problem where he wishes to parse a set of key value pairs using a schema. The issue is that the request data is parsed by the widget. We could allow the use of a non webob request though.. 
+
+
+We also need to think about:
+
+ - optional fields (can we have missing data??) this could be just the validation and we use .get() in the converter code
+ -
